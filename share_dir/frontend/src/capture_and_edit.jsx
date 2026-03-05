@@ -1,18 +1,35 @@
 import React, { useRef, useState } from "react";
 
-function App(){
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+function buildGrid(cells) {
+  const maxRow = Math.max(...cells.map(c => c.row));
+  const maxCol = Math.max(...cells.map(c => c.col));
 
-  const [receipts, setReceipts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const grid = Array.from({ length: maxRow + 1 }, () =>
+    Array.from({ length: maxCol + 1 }, () => "")
+  );
+
+  cells.forEach(c => {
+    grid[c.row][c.col] = c.text;
+  });
+
+  return grid;
+}
+
+function App(){
+  // HTMLの各要素にアクセスするための参照作成
+  const videoRef = useRef(null);    // <video>要素との紐づけ
+  const canvasRef = useRef(null);   // <canvas>要素との紐づけ
+
+  // [状態,更新する関数]の定義
+  const [receipts, setReceipts] = useState([]);   // 配列、初期値は空配列
+  const [loading, setLoading] = useState(false);  // 通信中などの処理状態、初期値はfalse  
 
   // カメラ開始
-  const startCamera = async () => {
+  const startCamera = async () => {     // カメラを起動する非同期関数の定義
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
-      videoRef.current.play();
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });    // ブラウザのAPIで映像を取得
+      videoRef.current.srcObject = stream;    // 取得した画像をvideoRefで紐付けた<video>データソースとしてセット
+      videoRef.current.play();    // 画面に表示
     } catch (err) {
       alert("カメラの起動に失敗しました。権限を確認してください。");
       console.error(err);
@@ -42,13 +59,12 @@ function App(){
 
       const json = await res.json();
 
-      if(json.lines){
+      if(json.cells){
         const newReceipt = {
           id: Date.now(),
-          lines: json.lines
+          cells: json.cells
         };
 
-        // 🔵 ここが追記処理
         setReceipts(prev => [...prev, newReceipt]);
       }
 
@@ -57,23 +73,34 @@ function App(){
   };
 
   // 編集
-  const updateLine = (receiptId, lineIndex, value) => {
+  const updateCell = (receiptId, row, col, value) => {
+
     setReceipts(prev =>
       prev.map(r =>
         r.id === receiptId
-          ? { ...r, lines: r.lines.map((l,i)=> i===lineIndex ? value : l) }
+          ? {
+              ...r,
+              cells: r.cells.map(c =>
+                c.row === row && c.col === col
+                  ? { ...c, text: value }
+                  : c
+              )
+            }
           : r
       )
     );
+
   };
 
   // 🔵 Excel出力（全部まとめて送る）
   const downloadExcel = async () => {
 
     const allData = receipts.flatMap((r, idx) =>
-      r.lines.map(line => ({
+      r.cells.map(cell => ({
         receipt_no: idx + 1,
-        text: line
+        row: cell.row,
+        col: cell.col,
+        text: cell.text
       }))
     );
 
@@ -106,20 +133,52 @@ function App(){
 
       <hr/>
 
-      {receipts.map((receipt, rIndex) => (
-        <div key={receipt.id} style={{marginBottom:30}}>
-          <h3>レシート {rIndex + 1}</h3>
-          {receipt.lines.map((line, i) => (
-            <div key={i}>
-              <input
-                style={{width:"80%"}}
-                value={line}
-                onChange={(e)=>updateLine(receipt.id, i, e.target.value)}
-              />
-            </div>
-          ))}
-        </div>
-      ))}
+      {receipts.map((receipt, rIndex) => {
+
+        const grid = buildGrid(receipt.cells);
+
+        return (
+          <div key={receipt.id} style={{marginBottom:40}}>
+            <h3>レシート {rIndex+1}</h3>
+
+            <table border="1" style={{borderCollapse:"collapse"}}>
+              <tbody>
+
+              {grid.map((row,rowIndex)=>(
+                <tr key={rowIndex}>
+
+                {row.map((cell,colIndex)=>{
+
+                  const cellData = receipt.cells.find(
+                    c => c.row===rowIndex && c.col===colIndex
+                  );
+
+                  return(
+                    <td key={colIndex}>
+                      <input
+                        style={{width:120}}
+                        value={cell}
+                        onChange={(e)=>updateCell(
+                          receipt.id,
+                          rowIndex,
+                          colIndex,
+                          e.target.value
+                        )}
+                      />
+                    </td>
+                  )
+                })}
+
+                </tr>
+              ))}
+
+              </tbody>
+            </table>
+
+          </div>
+        )
+
+      })}
 
       {receipts.length > 0 && (
         <button onClick={downloadExcel}>
