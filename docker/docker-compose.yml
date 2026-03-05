@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    container_name: r2e_backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../share_dir/backend:/share_dir_b
+    working_dir: /share_dir_b
+    command: python receipt2excel.py
+    gpus: all
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+    container_name: r2e_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../share_dir/frontend:/share_dir_f
+    working_dir: /share_dir_f
+    command: sh -c "npm install && npm run dev -- --host"
