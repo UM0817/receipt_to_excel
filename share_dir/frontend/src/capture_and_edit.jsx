@@ -59,10 +59,23 @@ function App(){
 
       const json = await res.json();
 
+      const ROWS = 30;
+      const COLS = 5;
+
       if(json.cells){
+        const grid = Array.from({length: ROWS}, () =>
+          Array(COLS).fill("")
+        );
+
+        json.cells.forEach(cell => {
+          if(cell.row < ROWS && cell.col < COLS){
+            grid[cell.row][cell.col] = cell.text;
+          }
+        });
+
         const newReceipt = {
           id: Date.now(),
-          cells: json.cells
+          grid: grid
         };
 
         setReceipts(prev => [...prev, newReceipt]);
@@ -74,34 +87,29 @@ function App(){
 
   // 編集
   const updateCell = (receiptId, row, col, value) => {
-
     setReceipts(prev =>
-      prev.map(r =>
-        r.id === receiptId
-          ? {
-              ...r,
-              cells: r.cells.map(c =>
-                c.row === row && c.col === col
-                  ? { ...c, text: value }
-                  : c
-              )
-            }
-          : r
-      )
-    );
+      prev.map(r => {
+        if(r.id !== receiptId) return r;
 
+        const newGrid = r.grid.map(arr => [...arr]);
+        newGrid[row][col] = value;
+
+        return {...r, grid:newGrid};
+      })
+    );
   };
 
   // 🔵 Excel出力（全部まとめて送る）
   const downloadExcel = async () => {
-
     const allData = receipts.flatMap((r, idx) =>
-      r.cells.map(cell => ({
-        receipt_no: idx + 1,
-        row: cell.row,
-        col: cell.col,
-        text: cell.text
-      }))
+      r.grid.flatMap((row, rowIndex) =>
+        row.map((cell, colIndex) => ({
+          receipt_no: idx+1,
+          row: rowIndex,
+          col: colIndex,
+          text: cell
+        }))
+      )
     );
 
     const res = await fetch("http://localhost:5000/api/export_excel", {
@@ -133,30 +141,19 @@ function App(){
 
       <hr/>
 
-      {receipts.map((receipt, rIndex) => {
+      {receipts.map((receipt, rIndex) => (
+        <div key={receipt.id}>
 
-        const grid = buildGrid(receipt.cells);
+          <h3>レシート {rIndex+1}</h3>
 
-        return (
-          <div key={receipt.id} style={{marginBottom:40}}>
-            <h3>レシート {rIndex+1}</h3>
-
-            <table border="1" style={{borderCollapse:"collapse"}}>
-              <tbody>
-
-              {grid.map((row,rowIndex)=>(
+          <table border="1">
+            <tbody>
+              {receipt.grid.map((row,rowIndex)=>(
                 <tr key={rowIndex}>
-
-                {row.map((cell,colIndex)=>{
-
-                  const cellData = receipt.cells.find(
-                    c => c.row===rowIndex && c.col===colIndex
-                  );
-
-                  return(
+                  {row.map((cell,colIndex)=>(
                     <td key={colIndex}>
                       <input
-                        style={{width:120}}
+                        style={{width:"80px"}}
                         value={cell}
                         onChange={(e)=>updateCell(
                           receipt.id,
@@ -166,19 +163,14 @@ function App(){
                         )}
                       />
                     </td>
-                  )
-                })}
-
+                  ))}
                 </tr>
               ))}
+            </tbody>
+          </table>
 
-              </tbody>
-            </table>
-
-          </div>
-        )
-
-      })}
+        </div>
+      ))}
 
       {receipts.length > 0 && (
         <button onClick={downloadExcel}>
