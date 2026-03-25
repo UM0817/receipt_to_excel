@@ -1,5 +1,5 @@
 FROM node:18-alpine
 
-WORKDIR /r2e_frontend
+WORKDIR /share_dir_f
 
 EXPOSE 5173

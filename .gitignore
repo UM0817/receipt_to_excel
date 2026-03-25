@@ -1,3 +1,4 @@
 memo.md
+share_dir/backend/__pycache__/
 share_dir/frontend/node_modules/
 share_dir/frontend/package-lock.json

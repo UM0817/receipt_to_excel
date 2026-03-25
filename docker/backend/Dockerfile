@@ -2,7 +2,7 @@ FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /r2e_backend
+WORKDIR /share_dir_b
 
 RUN apt-get update && apt-get install -y \
     python3 \

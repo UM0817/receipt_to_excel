@@ -21,5 +21,6 @@ services:
       - "5173:5173"
     volumes:
       - ../share_dir/frontend:/share_dir_f
+      - /share_dir_f/node_modules
     working_dir: /share_dir_f
     command: sh -c "npm install && npm run dev -- --host"
