@@ -22,7 +22,7 @@ WSL2ターミナルの起動
 ```$ wsl```  
 
 ### 2. Docker Desktop
-以下のリンクからインストールをよく読み、インストールしてください  
+以下のリンクからインストールをよく読み、インストールしてください。 
 https://www.docker.com/ja-jp/get-started/  
 
 WSL2 Backendの有効化  
@@ -43,3 +43,8 @@ $ docker compose build
 ```$ docker compose up```  
 
 ブラウザ```http://localhost:5137```にアクセスしてください。
+
+または、  
+
+Boot‗R2E.ps1内のパスを正しく書き換える。(初回のみ)  
+Boot‗R2E.batをデスクトップに置き、ダブルクリックする。  
