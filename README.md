@@ -44,7 +44,10 @@ $ docker compose build
 
 ブラウザ```http://localhost:5137```にアクセスしてください。
 
-または、  
+または、Boot‗R2E.bat, Boot‗R2E.ps1, Shutdown_R2E.bat, Shutdown_R2E.ps1内のパスを正しく書き換えたのち、  
 
-Boot‗R2E.ps1内のパスを正しく書き換える。(初回のみ)  
-Boot‗R2E.batをデスクトップに置き、ダブルクリックする。  
+起動  
+Boot‗R2E.batをダブルクリックする。  
+
+停止  
+Shutdown_R2E.batをダブルクリックする。  
